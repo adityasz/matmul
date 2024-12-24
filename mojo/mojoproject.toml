@@ -1,0 +1,14 @@
+[project]
+authors = ["Aditya Singh <1adityasingh@proton.me>"]
+channels = ["conda-forge", "https://conda.modular.com/max-nightly"]
+description = "Matrix multiplication in Mojo"
+name = "mojo"
+platforms = ["linux-64"]
+version = "0.1.0"
+
+[tasks]
+benchmark = "mojo benchmark.mojo"
+test = "mojo test.mojo"
+
+[dependencies]
+max = ">=25.1.0.dev2024122405,<26"
