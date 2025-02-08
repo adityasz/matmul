@@ -1,9 +1,7 @@
 import math
 import random
 
-from python import Python, PythonObject
-from memory import UnsafePointer, memcpy, memset_zero
-# from testing import assert_equal, assert_almost_equal # broken on Fedora 41 at least
+from memory import UnsafePointer, memset_zero
 
 from matmul import matmul
 

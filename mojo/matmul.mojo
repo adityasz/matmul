@@ -3,8 +3,7 @@ from memory import UnsafePointer, memset_zero, memset
 from sys.intrinsics import strided_load, strided_store
 from sys.info import sizeof
 
-# from kernel_explicit import kernel
-from kernel_comptime import kernel
+from kernel import kernel
 
 
 alias reg_block_m = 6
