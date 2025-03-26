@@ -5,9 +5,9 @@
 
 template<int Rows, bool UseMask>
 inline __attribute__((always_inline))
-static void kernelgen(const float* a,
-                      const float* b,
-                      float* c,
+static void kernelgen(const float *a,
+                      const float *b,
+                      float *c,
                       int k,
                       int n,
                       __m256i mask0 = __m256i(),
