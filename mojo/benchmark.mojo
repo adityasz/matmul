@@ -14,8 +14,8 @@ fn main() raises:
     var b = UnsafePointer[Float32, alignment=64].alloc(k * n)
     var c = UnsafePointer[Float32, alignment=64].alloc(m * n)
     
-    random.randn(a, m * k, mean=0, variance=1)
-    random.randn(b, k * n, mean=0, variance=1)
+    random.randn(a, m * k, mean=0, standard_deviation=1)
+    random.randn(b, k * n, mean=0, standard_deviation=1)
 
     matmul(a, b, c, m, k, n) # warmup
     var start: UInt = time.perf_counter_ns()

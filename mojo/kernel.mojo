@@ -15,7 +15,7 @@ fn kernel_inner[Rows: Int, UseMask: Bool](
 ):
     var a: UnsafePointer[Float32, mut=False] = sliver_a
     var b: UnsafePointer[Float32, mut=False] = sliver_b
-    var c_reg = InlineArray[SIMD[DType.float32, 8], 12](unsafe_uninitialized=True)
+    var c_reg = InlineArray[SIMD[DType.float32, 8], 12](uninitialized=True)
 
     @parameter
     for i in range(6):
