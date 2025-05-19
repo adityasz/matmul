@@ -122,6 +122,12 @@ int main(int argc, char **argv)
 		b_matmul->Args(shape);
 	}
 
+	for (auto &b : {b_mkl, b_matmul}) {
+		b->ComputeStatistics("max", [](const std::vector<double> &v) -> double {
+			return *(std::ranges::max_element(v));
+		});
+	}
+
 	benchmark::RunSpecifiedBenchmarks();
 	benchmark::Shutdown();
 }
