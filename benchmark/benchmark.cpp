@@ -1,4 +1,6 @@
+#include <filesystem>
 #include <fstream>
+#include <print>
 
 #include <benchmark/benchmark.h>
 #include <mkl.h>
@@ -6,8 +8,6 @@
 
 #include "matmul.h"
 #include "utils.h"
-
-static constexpr auto shapes_csv = "data/shapes.csv";
 
 static void create_flop_counter(benchmark::State &state, int m, int n, int k)
 {
@@ -71,8 +71,36 @@ std::vector<int64_t> get_shape(std::string_view str)
 
 int main(int argc, char **argv)
 {
-	benchmark::Initialize(&argc, argv);
-	if (benchmark::ReportUnrecognizedArguments(argc, argv))
+	int benchmark_argc = argc;
+	std::vector<char *> benchmark_argv;
+	benchmark_argv.reserve(argc);
+	benchmark_argv.push_back(argv[0]);
+
+	auto shapes_path = "data/shapes.csv";
+	bool found_path = false;
+	for (int i = 1; i < argc; i++) {
+		if (argv[i][0] != '-') {
+			if (found_path) {
+				std::println(stderr,
+				             "Expected only one positional argument. See {} --help.",
+				             argv[0]);
+				exit(1);
+			}
+			shapes_path = argv[i];
+			benchmark_argc -= 1;
+			found_path = true;
+		} else {
+			benchmark_argv.push_back(argv[i]);
+		}
+	}
+	benchmark::Initialize(&benchmark_argc, benchmark_argv.data(), []() {
+		benchmark::PrintDefaultHelp();
+		std::println(
+		    "          [PATH]{: ^8}path to a CSV file containing all the shapes (m, n, k) to benchmark on\n"
+		    "                {: ^8}(default: data/shapes.csv)", "", ""
+		);
+	});
+	if (benchmark::ReportUnrecognizedArguments(benchmark_argc, benchmark_argv.data()))
 		return 1;
 
 	auto b_mkl = benchmark::RegisterBenchmark(
@@ -80,7 +108,11 @@ int main(int argc, char **argv)
 	auto b_matmul = benchmark::RegisterBenchmark(
 		"Matmul", [](benchmark::State &state) { BM_matmul(state); });
 
-	std::ifstream file(shapes_csv);
+	if (!std::filesystem::exists(shapes_path)) {
+		std::println(stderr, "error: '{}' does not exist", shapes_path);
+		exit(1);
+	}
+	std::ifstream file(shapes_path);
 	std::string line;
 	while (std::getline(file, line)) {
 		auto shape = get_shape(line);
