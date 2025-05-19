@@ -4,7 +4,7 @@
 #include <immintrin.h>
 
 template<int Rows, bool UseMask>
-[[gnu::always_inline]]
+[[gnu::always_inline]] inline
 static void kernelgen(const float *a,
                       const float *b,
                       float       *c,
@@ -58,14 +58,14 @@ static void kernelgen(const float *a,
  * and `k` by `cols` and C_ is the micro-block with dimensions `rows` by `cols`
  * in C, where `rows` <= 6 and `cols` <= 16.
  */
-[[gnu::always_inline]]
-inline void kernel(const float *a,
-                   const float *b,
-                   float       *c,
-                   int          rows,
-                   int          cols,
-                   int          k,
-                   int          n)
+[[gnu::always_inline]] inline
+void kernel(const float *a,
+            const float *b,
+            float       *c,
+            int          rows,
+            int          cols,
+            int          k,
+            int          n)
 {
 	[[likely]]
 	if (cols == 16) {

@@ -7,7 +7,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(CMAKE_CXX_FLAGS "-Wall -Wpedantic -Wextra -march=native")
 set(CMAKE_CXX_FLAGS_DEBUG "-g3")
-set(CMAKE_CXX_FLAGS_RELEASE "-O3 -ffast-math -flto")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -ffast-math -flto=auto")
 
 add_subdirectory(src)
 add_subdirectory(benchmark)

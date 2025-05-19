@@ -32,7 +32,7 @@ static constexpr int panel_k = 1024;
  * a sliver of A into a sliver of `block_a` (like storing it in the column-major
  * format).
  */
-[[gnu::always_inline]]
+[[gnu::always_inline]] inline
 static void pack_sliver_a(const float *a, float *sliver_a, int rows, int cols, int k)
 {
 	for (int j = 0; j < cols; j++) {
@@ -47,7 +47,7 @@ static void pack_sliver_a(const float *a, float *sliver_a, int rows, int cols, i
  * @brief Packs a block of the matrix A into `block_a`.
  * TODO: Benchmark (PROPERLY) and see performance difference with and without this
  */
-[[gnu::always_inline]]
+[[gnu::always_inline]] inline
 static void pack_block_a(const float *a, float *block_a, int rows, int cols, int k)
 {
 	for (int i = 0; i < rows; i += reg_block_m) {
@@ -63,7 +63,7 @@ static void pack_block_a(const float *a, float *block_a, int rows, int cols, int
  * from top to bottom. In packing, we concatenate all the rows of a sliver of
  * B into a sliver of `block_b`.
  */
-[[gnu::always_inline]]
+[[gnu::always_inline]] inline
 static void pack_sliver_b(const float *b, float *sliver_b, int rows, int cols, int n)
 {
 	for (int i = 0; i < rows; i++) {
@@ -78,7 +78,7 @@ static void pack_sliver_b(const float *b, float *sliver_b, int rows, int cols, i
  * @brief Packs a block of the matrix B into `block_b`.
  * TODO: Benchmark (PROPERLY) and see performance difference with and without this
  */
-[[gnu::always_inline]]
+[[gnu::always_inline]] inline
 static void pack_block_b(const float *b, float *block_b, int rows, int cols, int n)
 {
 	for (int j = 0; j < cols; j += reg_block_n) {
