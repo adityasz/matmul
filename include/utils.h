@@ -7,14 +7,15 @@
 #include <random>
 
 struct aligned_deleter {
-	void operator()(float* p) const {
+	void operator()(float *p) const
+	{
 		operator delete[](p, static_cast<std::align_val_t>(64));
 	}
 };
 
 using aligned_ptr = std::unique_ptr<float[], aligned_deleter>;
 
-inline auto generate_data(int m, int k, int n) -> std::pair<aligned_ptr, aligned_ptr>
+inline auto generate_data(int m, int n, int k) -> std::pair<aligned_ptr, aligned_ptr>
 {
 	auto A = aligned_ptr(new (static_cast<std::align_val_t>(64)) float[m * k]);
 	auto B = aligned_ptr(new (static_cast<std::align_val_t>(64)) float[k * n]);

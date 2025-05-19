@@ -15,7 +15,7 @@ void compare_results(const float *actual, const float *expected, int size)
 
 void compare(int m, int k, int n)
 {
-	auto [A, B]   = generate_data(m, k, n);
+	auto [A, B]   = generate_data(m, n, k);
 	auto C_mkl    = aligned_ptr(new (static_cast<std::align_val_t>(64)) float[m * n]);
 	auto C_matmul = aligned_ptr(new (static_cast<std::align_val_t>(64)) float[m * n]);
 

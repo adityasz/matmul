@@ -4,14 +4,14 @@
 #include <immintrin.h>
 
 template<int Rows, bool UseMask>
-inline __attribute__((always_inline))
+[[gnu::always_inline]]
 static void kernelgen(const float *a,
                       const float *b,
-                      float *c,
-                      int k,
-                      int n,
-                      __m256i mask0 = __m256i(),
-                      __m256i mask1 = __m256i())
+                      float       *c,
+                      int          k,
+                      int          n,
+                      __m256i      mask0 = __m256i(),
+                      __m256i      mask1 = __m256i())
 {
 	__m256 c_reg[6][2];
 	for (int i = 0; i < 6; i++) {
@@ -58,14 +58,14 @@ static void kernelgen(const float *a,
  * and `k` by `cols` and C_ is the micro-block with dimensions `rows` by `cols`
  * in C, where `rows` <= 6 and `cols` <= 16.
  */
-inline __attribute__((always_inline))
-void kernel(const float *a,
-            const float *b,
-            float *c,
-            int rows,
-            int cols,
-            int k,
-            int n)
+[[gnu::always_inline]]
+inline void kernel(const float *a,
+                   const float *b,
+                   float       *c,
+                   int          rows,
+                   int          cols,
+                   int          k,
+                   int          n)
 {
 	[[likely]]
 	if (cols == 16) {
@@ -79,7 +79,7 @@ void kernel(const float *a,
 			case 5: kernelgen<5, false>(a, b, c, k, n); break;
 		    }
 	} else {
-        __attribute__((aligned(64)))
+        [[gnu::aligned(64)]]
         static int32_t mask[32] = {-1, -1, -1, -1, -1, -1, -1, -1,
                                    -1, -1, -1, -1, -1, -1, -1, -1,
                                     0,  0,  0,  0,  0,  0,  0,  0,

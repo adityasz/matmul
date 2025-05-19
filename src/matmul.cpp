@@ -21,8 +21,8 @@ static constexpr int panel_m = 6144;
 static constexpr int panel_n = 512;
 static constexpr int panel_k = 1024;
 
-static float block_a[panel_m * panel_k] __attribute__((aligned(64)));
-static float block_b[panel_k * panel_n] __attribute__((aligned(64)));
+[[gnu::aligned(64)]] static float block_a[panel_m * panel_k];
+[[gnu::aligned(64)]] static float block_b[panel_k * panel_n];
 
 /**
  * @brief Packs a sliver of the matrix A into `block_a`.
@@ -32,7 +32,7 @@ static float block_b[panel_k * panel_n] __attribute__((aligned(64)));
  * a sliver of A into a sliver of `block_a` (like storing it in the column-major
  * format).
  */
-inline __attribute__((always_inline))
+[[gnu::always_inline]]
 static void pack_sliver_a(const float *a, float *sliver_a, int rows, int cols, int k)
 {
 	for (int j = 0; j < cols; j++) {
@@ -47,7 +47,7 @@ static void pack_sliver_a(const float *a, float *sliver_a, int rows, int cols, i
  * @brief Packs a block of the matrix A into `block_a`.
  * TODO: Benchmark (PROPERLY) and see performance difference with and without this
  */
-inline __attribute__((always_inline))
+[[gnu::always_inline]]
 static void pack_block_a(const float *a, float *block_a, int rows, int cols, int k)
 {
 	for (int i = 0; i < rows; i += reg_block_m) {
@@ -63,7 +63,7 @@ static void pack_block_a(const float *a, float *block_a, int rows, int cols, int
  * from top to bottom. In packing, we concatenate all the rows of a sliver of
  * B into a sliver of `block_b`.
  */
-inline __attribute__((always_inline))
+[[gnu::always_inline]]
 static void pack_sliver_b(const float *b, float *sliver_b, int rows, int cols, int n)
 {
 	for (int i = 0; i < rows; i++) {
@@ -78,7 +78,7 @@ static void pack_sliver_b(const float *b, float *sliver_b, int rows, int cols, i
  * @brief Packs a block of the matrix B into `block_b`.
  * TODO: Benchmark (PROPERLY) and see performance difference with and without this
  */
-inline __attribute__((always_inline))
+[[gnu::always_inline]]
 static void pack_block_b(const float *b, float *block_b, int rows, int cols, int n)
 {
 	for (int j = 0; j < cols; j += reg_block_n) {
