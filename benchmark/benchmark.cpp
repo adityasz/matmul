@@ -53,7 +53,9 @@ static void BM_mkl(benchmark::State &state)
 
 std::vector<int64_t> get_shape(std::string_view str)
 {
-	int64_t     m, n, k;
+	int64_t m = 0;
+	int64_t n = 0;
+	int64_t k = 0;
 	const char *start = str.data();
 	const char *end   = start + str.size();
 
