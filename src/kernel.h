@@ -3,15 +3,10 @@
 
 #include <immintrin.h>
 
-template<int Rows, bool UseMask>
-[[gnu::always_inline]] inline
-static void kernelgen(const float *a,
-                      const float *b,
-                      float       *c,
-                      int          k,
-                      int          n,
-                      __m256i      mask0 = __m256i(),
-                      __m256i      mask1 = __m256i())
+template<int rows, bool use_mask>
+[[gnu::always_inline]] inline void
+kernelgen(const float *a, const float *b, float *c, int k, int n,
+          __m256i mask0 = __m256i(), __m256i mask1 = __m256i())
 {
 	__m256 c_reg[6][2];
 	for (int i = 0; i < 6; i++) {

@@ -33,7 +33,7 @@ static constexpr int panel_k = 1024;
  * format).
  */
 [[gnu::always_inline]] inline
-static void pack_sliver_a(const float *a, float *sliver_a, int rows, int cols, int k)
+void pack_sliver_a(const float *a, float *sliver_a, int rows, int cols, int k)
 {
 	for (int j = 0; j < cols; j++) {
 		for (int i = 0; i < rows; i++)
@@ -48,7 +48,7 @@ static void pack_sliver_a(const float *a, float *sliver_a, int rows, int cols, i
  * TODO: Benchmark (PROPERLY) and see performance difference with and without this
  */
 [[gnu::always_inline]] inline
-static void pack_block_a(const float *a, float *block_a, int rows, int cols, int k)
+void pack_block_a(const float *a, float *block_a, int rows, int cols, int k)
 {
 	for (int i = 0; i < rows; i += reg_block_m) {
 		int sliver_rows = std::min(reg_block_m, rows - i);
@@ -64,7 +64,7 @@ static void pack_block_a(const float *a, float *block_a, int rows, int cols, int
  * B into a sliver of `block_b`.
  */
 [[gnu::always_inline]] inline
-static void pack_sliver_b(const float *b, float *sliver_b, int rows, int cols, int n)
+void pack_sliver_b(const float *b, float *sliver_b, int rows, int cols, int n)
 {
 	for (int i = 0; i < rows; i++) {
 		for (int j = 0; j < cols; j++)
@@ -79,7 +79,7 @@ static void pack_sliver_b(const float *b, float *sliver_b, int rows, int cols, i
  * TODO: Benchmark (PROPERLY) and see performance difference with and without this
  */
 [[gnu::always_inline]] inline
-static void pack_block_b(const float *b, float *block_b, int rows, int cols, int n)
+void pack_block_b(const float *b, float *block_b, int rows, int cols, int n)
 {
 	for (int j = 0; j < cols; j += reg_block_n) {
 		int sliver_cols = std::min(reg_block_n, cols - j);

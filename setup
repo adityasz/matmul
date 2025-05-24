@@ -1,0 +1,38 @@
+#!/usr/bin/env python
+
+from pathlib import Path
+
+
+def parse_ranges(input: str) -> list[int]:
+    ranges: list[str] = input.strip().split(',')
+    output: list[int] = []
+    for r in ranges:
+        bounds = r.split('-')
+        if len(bounds) == 1:
+            output.append(int(bounds[0]))
+        else:
+            output.extend(list(range(int(bounds[0]), int(bounds[1]) + 1)))
+    return output
+
+
+print("Disabling address space randomization...")
+with open("/proc/sys/kernel/randomize_va_space", 'w') as f:
+    f.write("0\n")
+
+with open("/sys/devices/system/cpu/isolated", 'r') as f:
+    isolcpus: list[int] = parse_ranges(f.read())
+print(f"Isolated cpus: {isolcpus}")
+
+fake_cpus: list[int] = []
+for i in isolcpus:
+    path = Path(f"/sys/devices/system/cpu/cpu{i}/topology/thread_siblings_list")
+    if not path.is_file():
+        continue
+    with open(path, 'r') as f:
+        cpus = parse_ranges(f.read())
+        cpus.remove(i)
+        fake_cpus.extend(cpus)
+print(f"Disabling SMT cpus {fake_cpus}...")
+for i in fake_cpus:
+    with open(f"/sys/devices/system/cpu/cpu{i}/online", 'w') as f:
+        f.write("0\n")
