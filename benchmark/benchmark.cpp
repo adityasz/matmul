@@ -106,7 +106,7 @@ int main(int argc, char **argv)
 		return 1;
 
 	auto b_mkl = benchmark::RegisterBenchmark(
-		"Intel MKL", [](benchmark::State &state) { BM_mkl(state); });
+		"MKL", [](benchmark::State &state) { BM_mkl(state); });
 	auto b_matmul = benchmark::RegisterBenchmark(
 		"Matmul", [](benchmark::State &state) { BM_matmul(state); });
 
