@@ -18,6 +18,25 @@ static void create_flop_counter(benchmark::State &state, int m, int n, int k)
 	);
 }
 
+static void create_cache_counters(benchmark::State &state)
+{
+	if (!state.counters.contains("L1-dcache-load-misses"))
+		return;
+	double l1d_misses = state.counters["L1-dcache-load-misses"];
+	if (state.counters.contains("instructions")) {
+		if (double instructions = state.counters["instructions"]; instructions > 0) {
+			state.counters["L1D_MPKI"] = benchmark::Counter(
+			    (l1d_misses / instructions) * 1000.0, benchmark::Counter::kAvgIterations);
+		}
+	}
+	if (state.counters.contains("L1-dcache-loads")) {
+		if (double l1d_loads = state.counters["L1-dcache-loads"]; l1d_loads > 0) {
+			state.counters["L1D_miss_rate"] = benchmark::Counter(
+			    (l1d_misses / l1d_loads) * 100.0, benchmark::Counter::kAvgIterations);
+		}
+	}
+}
+
 static void BM_matmul(benchmark::State &state)
 {
 	int m = static_cast<int>(state.range(0));
@@ -31,6 +50,7 @@ static void BM_matmul(benchmark::State &state)
 		matmul(A.get(), B.get(), C.get(), m, k, n);
 
 	create_flop_counter(state, m, n, k);
+	create_cache_counters(state);
 }
 
 static void BM_mkl(benchmark::State &state)
@@ -49,6 +69,7 @@ static void BM_mkl(benchmark::State &state)
 	}
 
 	create_flop_counter(state, m, n, k);
+	create_cache_counters(state);
 }
 
 std::vector<int64_t> get_shape(std::string_view str)
@@ -120,12 +141,6 @@ int main(int argc, char **argv)
 		auto shape = get_shape(line);
 		b_mkl->Args(shape);
 		b_matmul->Args(shape);
-	}
-
-	for (auto &b : {b_mkl, b_matmul}) {
-		b->ComputeStatistics("max", [](const std::vector<double> &v) -> double {
-			return *(std::ranges::max_element(v));
-		});
 	}
 
 	benchmark::RunSpecifiedBenchmarks();

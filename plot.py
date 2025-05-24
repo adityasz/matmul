@@ -14,6 +14,19 @@ from numpy.typing import NDArray
 Shape = tuple[int, int, int]
 
 
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--results", type=Path, nargs='+', metavar="FILE...",
+                        help="results files to process")
+    parser.add_argument("--flops", type=Path, default="figures/flops.svg",
+                        metavar="PATH", help="path to save FLOPS plot to")
+    parser.add_argument("--l1d-mpki", type=Path, default="figures/l1d-mpki.svg",
+                        metavar="PATH", help="path to save the L1D MPKI plot to")
+    parser.add_argument("--l1d-mrate", type=Path, default="figures/l1d-mrate.svg",
+                        metavar="PATH", help="path to save the L1D miss rate plot to")
+    return parser.parse_args()
+
+
 class Report:
     runs: list[float]
 
@@ -42,7 +55,7 @@ class Report:
         return self.get_std() / self.get_mean()
 
 
-def _parse_results(filename: Path) -> dict[str, dict[Shape, Report]]:
+def _parse_results(filename: Path, key: str) -> dict[str, dict[Shape, Report]]:
     def is_aggregate(name: str) -> bool:
         return name.split("/")[-1].find("_") != -1
 
@@ -56,25 +69,22 @@ def _parse_results(filename: Path) -> dict[str, dict[Shape, Report]]:
         stuff = name.split("/")
         lib = stuff[0]
         shape = (int(stuff[1:][0]), int(stuff[1:][1]), int(stuff[1:][2]))
-        results[lib][shape].append(result["FLOPS"])
+        results[lib][shape].append(result[key])
     return results
 
 
-def get_results(filenames: list[Path]) -> dict[str, dict[Shape, Report]]:
+def get_results(filenames: list[Path], key: str) -> dict[str, dict[Shape, Report]]:
     merged_results: dict[str, dict[Shape, Report]] = defaultdict(
         lambda: defaultdict(lambda: Report()))
     for filename in filenames:
-        results = _parse_results(filename)
+        results = _parse_results(filename, key)
         for lib, result in results.items():
             for shape, report in result.items():
                 merged_results[lib][shape].extend(report.runs)
     return merged_results
 
 
-def plot_results(
-    results: dict[str, dict[Shape, Report]],
-    peak: Optional[int] = None
-) -> Figure:
+def plot_results(results: dict[str, dict[Shape, Report]]) -> Figure:
     bar_height: float = 1.00
     num_bars: dict[Shape, int] = defaultdict(lambda: 0)
     for lib, result in results.items():
@@ -110,8 +120,6 @@ def plot_results(
     labels: list[str] = list(map(
         lambda shape: f"${r"\times".join(str(x) for x in shape)}$",
         num_bars.keys()))
-    if peak is not None:
-        ax.set_xlim(0, peak)
     ax.set_yticks(shape_ys + (bar_counts - 1) * bar_height / 2, labels)
     ax.set_xticks([])
     for spine in ("top", "right", "bottom", "left"):
@@ -121,23 +129,21 @@ def plot_results(
     return fig
 
 
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--peak", type=int, metavar="FLOPS",
-                        help="theoretical peak GFLOPS")
-    parser.add_argument("--results", type=Path, nargs='+', metavar="FILE...",
-                        help="results files to process")
-    parser.add_argument("--output", type=Path, default="figures/plot.svg",
-                        metavar="PATH", help="path to output")
-    return parser.parse_args()
-
-
 def main():
     args = parse_args()
-    results = get_results(args.results)
-    fig = plot_results(results, args.peak)
-    args.output.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(args.output)
+
+    for directory in (args.flops, args.l1d_mpki, args.l1d_mrate):
+        directory.parent.mkdir(parents=True, exist_ok=True)
+
+    for key, filename in (
+        ("FLOPS", args.flops),
+        ("L1D-MPKI", args.l1d_mpki),
+        ("L1D-miss-rate", args.l1d_mrate)
+    ):
+        results = get_results(args.results, key)
+        fig = plot_results(results)
+        fig.savefig(filename)
+        plt.close()
 
 
 if __name__ == "__main__":
