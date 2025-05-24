@@ -18,12 +18,12 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--results", type=Path, nargs='+', metavar="FILE...",
                         help="results files to process")
-    parser.add_argument("--flops", type=Path, default="figures/flops.svg",
-                        metavar="PATH", help="path to save FLOPS plot to")
-    parser.add_argument("--l1d-mpki", type=Path, default="figures/l1d-mpki.svg",
-                        metavar="PATH", help="path to save the L1D MPKI plot to")
-    parser.add_argument("--l1d-mrate", type=Path, default="figures/l1d-mrate.svg",
-                        metavar="PATH", help="path to save the L1D miss rate plot to")
+    parser.add_argument("--flops", nargs='?', type=Path, const="figures/flops.svg",
+                        metavar="PATH", help="plot GFLOPS")
+    parser.add_argument("--l1d-mpki", nargs='?', type=Path, const="figures/l1d-mpki.svg",
+                        metavar="PATH", help="plot L1D MPKI")
+    parser.add_argument("--l1d-mrate", nargs='?', type=Path, const="figures/l1d-mrate.svg",
+                        metavar="PATH", help="plot L1D miss rate")
     return parser.parse_args()
 
 
@@ -132,16 +132,16 @@ def plot_results(results: dict[str, dict[Shape, Report]]) -> Figure:
 def main():
     args = parse_args()
 
-    for directory in (args.flops, args.l1d_mpki, args.l1d_mrate):
-        directory.parent.mkdir(parents=True, exist_ok=True)
-
     for key, filename in (
         ("FLOPS", args.flops),
-        ("L1D-MPKI", args.l1d_mpki),
-        ("L1D-miss-rate", args.l1d_mrate)
+        ("L1D_MPKI", args.l1d_mpki),
+        ("L1D_miss_rate", args.l1d_mrate)
     ):
+        if filename is None:
+            continue
         results = get_results(args.results, key)
         fig = plot_results(results)
+        filename.parent.mkdir(parents=True, exist_ok=True)
         fig.savefig(filename)
         plt.close()
 
