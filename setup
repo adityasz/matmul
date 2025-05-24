@@ -23,16 +23,15 @@ with open("/sys/devices/system/cpu/isolated", 'r') as f:
     isolcpus: list[int] = parse_ranges(f.read())
 print(f"Isolated cpus: {isolcpus}")
 
-fake_cpus: list[int] = []
+smt_pairs: list[tuple[int, ...]] = []
 for i in isolcpus:
     path = Path(f"/sys/devices/system/cpu/cpu{i}/topology/thread_siblings_list")
-    if not path.is_file():
+    if not path.is_file(): # because they may already be disabled
         continue
     with open(path, 'r') as f:
-        cpus = parse_ranges(f.read())
-        cpus.remove(i)
-        fake_cpus.extend(cpus)
-print(f"Disabling SMT cpus {fake_cpus}...")
-for i in fake_cpus:
-    with open(f"/sys/devices/system/cpu/cpu{i}/online", 'w') as f:
-        f.write("0\n")
+        smt_pairs.append(tuple(parse_ranges(f.read())))
+for pair in set(smt_pairs):
+    for i in pair[1:]:
+        print(f"Disabling cpu {i} from SMT pair {pair}...")
+        with open(f"/sys/devices/system/cpu/cpu{i}/online", 'w') as f:
+            f.write("0\n")
