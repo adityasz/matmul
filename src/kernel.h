@@ -9,58 +9,47 @@ kernelgen(const float *a, const float *b, float *c, int k, int n,
           __m256i mask0 = __m256i(), __m256i mask1 = __m256i())
 {
 	__m256 c_reg[6][2];
-	for (int i = 0; i < 6; i++) {
-		if (Rows > i) {
-			if constexpr (UseMask) {
-				c_reg[i][0] = _mm256_maskload_ps(&c[i * n + 0], mask0);
-				c_reg[i][1] = _mm256_maskload_ps(&c[i * n + 8], mask1);
-			} else {
-				c_reg[i][0] = _mm256_loadu_ps(&c[i * n + 0]);
-				c_reg[i][1] = _mm256_loadu_ps(&c[i * n + 8]);
-			}
+	for (int i = 0; i < rows; i++) {
+		if constexpr (use_mask) {
+			c_reg[i][0] = _mm256_maskload_ps(&c[i * n + 0], mask0);
+			c_reg[i][1] = _mm256_maskload_ps(&c[i * n + 8], mask1);
+		} else {
+			c_reg[i][0] = _mm256_loadu_ps(&c[i * n + 0]);
+			c_reg[i][1] = _mm256_loadu_ps(&c[i * n + 8]);
 		}
 	}
 	for (int p = 0; p < k; p++) {
 		__m256 b_vec0 = _mm256_load_ps(&b[0]);
 		__m256 b_vec1 = _mm256_load_ps(&b[8]);
-		for (int i = 0; i < 6; i++) {
-			if (Rows > i) {
-				__m256 a_vec = _mm256_broadcast_ss(&a[i]);
-				c_reg[i][0] = _mm256_fmadd_ps(a_vec, b_vec0, c_reg[i][0]);
-				c_reg[i][1] = _mm256_fmadd_ps(a_vec, b_vec1, c_reg[i][1]);
-			}
+		for (int i = 0; i < rows; i++) {
+			__m256 a_vec = _mm256_broadcast_ss(&a[i]);
+			c_reg[i][0] = _mm256_fmadd_ps(a_vec, b_vec0, c_reg[i][0]);
+			c_reg[i][1] = _mm256_fmadd_ps(a_vec, b_vec1, c_reg[i][1]);
 		}
 		a += 6;
 		b += 16;
 	}
-	for (int i = 0; i < 6; i++) {
-		if (Rows > i) {
-			if constexpr (UseMask) {
-				_mm256_maskstore_ps(&c[i * n + 0], mask0, c_reg[i][0]);
-				_mm256_maskstore_ps(&c[i * n + 8], mask1, c_reg[i][1]);
-			} else {
-				_mm256_storeu_ps(&c[i * n + 0], c_reg[i][0]);
-				_mm256_storeu_ps(&c[i * n + 8], c_reg[i][1]);
-			}
+	for (int i = 0; i < rows; i++) {
+		if constexpr (use_mask) {
+			_mm256_maskstore_ps(&c[i * n + 0], mask0, c_reg[i][0]);
+			_mm256_maskstore_ps(&c[i * n + 8], mask1, c_reg[i][1]);
+		} else {
+			_mm256_storeu_ps(&c[i * n + 0], c_reg[i][0]);
+			_mm256_storeu_ps(&c[i * n + 8], c_reg[i][1]);
 		}
 	}
 }
 
 /**
- * @brief The micro-kernel that computes C_ := A_ B_ + C_.
+ * The micro-kernel that computes C_ := A_ B_ + C_.
  *
  * A_ and B_ are slivers from the matrices A and B with dimensions `rows` by `k`
  * and `k` by `cols` and C_ is the micro-block with dimensions `rows` by `cols`
  * in C, where `rows` <= 6 and `cols` <= 16.
  */
-[[gnu::always_inline]] inline
-void kernel(const float *a,
-            const float *b,
-            float       *c,
-            int          rows,
-            int          cols,
-            int          k,
-            int          n)
+[[gnu::always_inline]] inline void
+kernel(const float *a, const float *b, float *c,
+       int rows, int cols, int k, int n)
 {
 	[[likely]]
 	if (cols == 16) {

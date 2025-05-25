@@ -16,7 +16,6 @@ static constexpr int reg_block_m = 6;
 static constexpr int reg_block_n = 16;
 
 // TODO: find good numbers for Alderlake
-// https://llvm.org/docs/Benchmarking.html
 static constexpr int panel_m = 6144;
 static constexpr int panel_n = 512;
 static constexpr int panel_k = 1024;
@@ -25,12 +24,10 @@ static constexpr int panel_k = 1024;
 [[gnu::aligned(64)]] static float block_b[panel_k * panel_n];
 
 /**
- * @brief Packs a sliver of the matrix A into `block_a`.
+ * Packs a sliver of the matrix A into `block_a`.
  *
- * We access the elements of each sliver along the columns. We access these
- * columns from left to right. In packing, we concatenate all the columns of
- * a sliver of A into a sliver of `block_a` (like storing it in the column-major
- * format).
+ * The elements of a sliver from A are read along the columns, which are read
+ * from left to right.
  */
 [[gnu::always_inline]] inline
 void pack_sliver_a(const float *a, float *sliver_a, int rows, int cols, int k)
@@ -38,15 +35,12 @@ void pack_sliver_a(const float *a, float *sliver_a, int rows, int cols, int k)
 	for (int j = 0; j < cols; j++) {
 		for (int i = 0; i < rows; i++)
 			*sliver_a++ = a[i * k + j];
-		std::memset(sliver_a, 0, sizeof(float) * (reg_block_m - rows));
-		sliver_a += reg_block_m - rows;
+		for (int i = rows; i < reg_block_m; i++)
+			*sliver_a++ = 0;
 	}
 }
 
-/**
- * @brief Packs a block of the matrix A into `block_a`.
- * TODO: Benchmark (PROPERLY) and see performance difference with and without this
- */
+/// Packs a block of the matrix A into `block_a`.
 [[gnu::always_inline]] inline
 void pack_block_a(const float *a, float *block_a, int rows, int cols, int k)
 {
@@ -57,11 +51,10 @@ void pack_block_a(const float *a, float *block_a, int rows, int cols, int k)
 }
 
 /**
- * @brief Packs a sliver of the matrix B into `block_b`.
+ * Packs a sliver of the matrix B into `block_b`.
  *
- * We access the elements of each sliver along the rows. We access these rows
- * from top to bottom. In packing, we concatenate all the rows of a sliver of
- * B into a sliver of `block_b`.
+ * The elements of a sliver from B are read along the rows, which are read
+ * from top to bottom.
  */
 [[gnu::always_inline]] inline
 void pack_sliver_b(const float *b, float *sliver_b, int rows, int cols, int n)
@@ -69,15 +62,12 @@ void pack_sliver_b(const float *b, float *sliver_b, int rows, int cols, int n)
 	for (int i = 0; i < rows; i++) {
 		for (int j = 0; j < cols; j++)
 			*sliver_b++ = b[i * n + j];
-		std::memset(sliver_b, 0, sizeof(float) * (reg_block_n - cols));
-		sliver_b += reg_block_n - cols;
+		for (int j = cols; j < reg_block_n; j++)
+			*sliver_b++ = 0;
 	}
 }
 
-/**
- * @brief Packs a block of the matrix B into `block_b`.
- * TODO: Benchmark (PROPERLY) and see performance difference with and without this
- */
+/// Packs a block of the matrix B into `block_b`.
 [[gnu::always_inline]] inline
 void pack_block_b(const float *b, float *block_b, int rows, int cols, int n)
 {
